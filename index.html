@@ -8,15 +8,15 @@
 </head>
 <body>
     <header>
-        <img id="dt-logo" src="imgs/dt-logo.png" height="50" width=auto style="cursor: pointer;" onclick="homeRedirect()"alt="Daily Trojan Logo"/>
-        <nav id="navbar">
+        <img id="dt-logo" src="./imgs/dt-logo.png" height="50" width=auto style="cursor: pointer;" onclick="homeRedirect()"alt="Daily Trojan Logo"/>
+        <!-- <nav id="navbar">
            <div class="game-options">
             <ul>
-                <a href="#mini-crossword">mini crossword</a> <!--link separate games websites-->
-                <a href="#bandle">bandle</a>
+                <a href="#mini-crossword">mini crossword</a> link separate games websites-->
+                <!-- <a href="#bandle">bandle</a>
             </ul>
            </div>
-        </nav>
+        </nav> -->
     </header>
     <main>
         <div class="games-grid">
@@ -27,7 +27,7 @@
                         <h1>Bandle</h1>
                     </div>
                 </a>
-                <div class="game-card-content">
+                <div class="game-card-content" onclick="bandleRedirect()">
                     <p>Guess the song played by the Trojan Marching Band.</p>
                     <a class="game-card-button">Play</a>
                 </div>
@@ -35,24 +35,24 @@
             <div class="game-card">
                 <a>
                     <div class="game-card-cover">
-                        <div class="game-card-image"></div>
+                        <div class="game-card-image"><img src="./imgs/guesSC.png"/></div>
                         <h1>GuesSC</h1>
                     </div>
                 </a>
                 <div class="game-card-content">
-                    <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit.</p>
+                    <p>Guess the USC location based off the image.</p>
                     <a class="game-card-button">Play</a>
                 </div>
             </div>
             <div class="game-card">
                 <a>
                     <div class="game-card-cover">
-                        <div class="game-card-image"></div>
-                        <h1>Bandle</h1>
+                        <div class="game-card-image"><img src="./imgs/crossword-logo.png"/></div>
+                        <h1>Mini Crossword</h1>
                     </div>
                 </a>
-                <div class="game-card-content">
-                    <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit.</p>
+                <div class="game-card-content" onclick="crosswordRedirect()">
+                    <p>The Daily Trojan Mini Crossword puzzle, based on all things USC!</p>
                     <a class="game-card-button">Play</a>
                 </div>
             </div>
