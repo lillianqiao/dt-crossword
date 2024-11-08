@@ -9,5 +9,5 @@ function crosswordRedirect() {
 
 function bandleRedirect()
 {
-    window.location.href = "./bandle/";
+    window.location.href = "https://noahpin.github.io/bandle/";
 }
