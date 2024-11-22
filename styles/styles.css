@@ -1,21 +1,17 @@
 :root {
     --cardinal: #990000;
-    --cardinal-light: #ff9595;
 }
 
-body,
-html {
+body, html {
     margin: 0;
     padding: 0;
     width: 100%;
     height: 100%;
-    font-family: 'Source Serif Pro', serif;
 }
-
 main {
     height: fit-content;
     width: 100vw;
-    padding: 30px 40px;
+    padding: 30px 40px; 
     box-sizing: border-box;
     max-width: 900px;
     margin: auto;
@@ -24,9 +20,8 @@ main {
 .games-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    grid-gap: 20px;
+    grid-gap: 30px;
 }
-
 @media screen and (max-width: 950px) {
     .games-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -34,7 +29,13 @@ main {
         width: min(650px, 100%);
     }
 }
-
+@media screen and (max-width: 600px) {
+    .games-grid {
+        grid-template-columns: repeat(2, 1fr);
+        margin: auto;
+        width: min(650px, 100%);
+    }
+}
 .game-card {
     border: 1px solid lightgray;
     border-radius: 8px;
@@ -42,19 +43,15 @@ main {
     flex-direction: column;
     display: flex;
     position: relative;
-    min-height: 330px;
-    overflow: hidden;
+    height: 330px;
 }
-
 .game-card-cover {
     width: 100%;
     border-bottom: 1px solid lightgray;
 }
-
 .game-card-cover h1 {
     text-align: center;
 }
-
 .game-card-image {
     width: 100%;
     height: 80px;
@@ -63,11 +60,9 @@ main {
     justify-content: center;
     padding-top: 20px;
 }
-
 .game-card-image img {
     height: 100%;
 }
-
 .game-card-content {
     padding: 0 20px;
     padding-bottom: 20px;
@@ -78,37 +73,13 @@ main {
     text-align: center;
 }
 
-.game-card-content p {
-    margin-bottom: 8px;
-}
-
-@media screen and (max-width: 650px) {
-    .game-card-image {
-        width: 100%;
-        height: 70px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding-top: 20px;
-    }
-    .game-card {
-        min-height: 300px;
-    }
-    .game-card-cover h1 {
-        font-size: min(26px, 6vw);
-        margin-top: 5px;
-        margin-bottom: 10px;
-        padding: 0 10px;
-    }
-}
-
 .game-card-button {
     display: block;
     width: 100%;
     border: none;
     background: var(--cardinal);
     color: white;
-    font-family: 'Inter', sans-serif;
+    font-family: serif;
     border-radius: 4px;
     font-size: 16px;
     height: 40px;
@@ -120,7 +91,9 @@ main {
 }
 
 header {
+
     display: flex;
     align-items: center;
     justify-content: center;
+
 }

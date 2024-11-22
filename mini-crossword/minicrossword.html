@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DT Mini Crossword</title>
+  <link rel="stylesheet" href="minicrossword.css">
+</head>
+<body>
+
+  <img id="dt-logo" src="../imgs/dt-logo.png" height="50" width=auto style="cursor: pointer;" onclick="homeRedirect()"alt="Daily Trojan Logo"/>
+  <!-- <nav id="navbar">
+    <ul>
+      <a href="minicrossword.html">Crossword</a>
+      <a href="#puzzle">Puzzle</a>
+  </ul> -->
+  </nav>
+  <h1>Daily Trojan Mini Crossword</h1>
+  <div class="crossword"></div>
+
+  <div class="clues">
+    <h2>Across</h2>
+    <ul id="across-clues"></ul>
+
+    <h2>Down</h2>
+    <ul id="down-clues"></ul>
+  </div>
+
+  <button onclick="checkSolution()">Check Solution</button>
+  <button onclick="resetGrid()">Reset</button>
+  
+  <script src="crosswordjson.js"></script>
+</body>
+</html>

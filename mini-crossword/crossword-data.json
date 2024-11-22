@@ -1,0 +1,19 @@
+{
+    "grid": [
+      ["T", "R", "O", "J", "A", "N"],
+      [null, "E", null, null, null, "E"],
+      ["E", "G", "G", null, null, "W"],
+      [null, "A", null, null, null, "S"],
+      ["S", "L", "A", "Y", null, null]
+    ],
+    "acrossClues": [
+      { "number": 1, "clue": "A USC student is a...", "position": [0, 0] },
+      { "number": 3, "clue": "Chicken baby", "position": [2, 0] },
+      { "number": 5, "clue": "Gen Z slang for saying impressive", "position": [4, 0] }
+    ],
+    "downClues": [
+      { "number": 2, "clue": "A synonym for royal", "position": [0, 1] },
+      { "number": 6, "clue": "Daily Trojan is a ---- source", "position": [0, 5] }
+    ]
+  }
+  
