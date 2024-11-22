@@ -3,32 +3,32 @@
 //write the clues and number them accordingly, then write their position based on grid spot
 //[0,0] is the leftmost, topmost grid
 
-// const crosswordData = {
-//   grid: [
-//   ['T', 'R', 'O', 'J', 'A', 'N'],
-//   [null, 'E', null, null, null, 'E'],
-//   ['E', 'G', 'G', null, null, 'W'],
-//   [null, 'A', null, null, null, 'S'],
-//   ['S', 'L', 'A', 'Y', null, null]
-//   ],
-//   acrossClues: [
-//     { number: 1, clue: 'A USC student is a...', position: [0, 0] },
-//     { number: 3, clue: 'Chicken baby', position: [2, 0] },
-//     { number: 5, clue: 'Gen Z slang for saying impressive', position: [4, 0] }
-//   ],
-//   downClues: [
-//     { number: 2, clue: 'A synonym for royal', position: [0, 1] },
-//     { number: 6, clue: 'Daily Trojan is a ---- source', position: [0, 5] }
-//   ]
-// };
+const crosswordData = {
+  grid: [c
+  ['T', 'R', 'O', 'J', 'A', 'N'],
+  [null, 'E', null, null, null, 'E'],
+  ['E', 'G', 'G', null, null, 'W'],
+  [null, 'A', null, null, null, 'S'],
+  ['S', 'L', 'A', 'Y', null, null]
+  ],
+  acrossClues: [
+    { number: 1, clue: 'A USC student is a...', position: [0, 0] },
+    { number: 3, clue: 'Chicken baby', position: [2, 0] },
+    { number: 5, clue: 'Gen Z slang for saying impressive', position: [4, 0] }
+  ],
+  downClues: [
+    { number: 2, clue: 'A synonym for royal', position: [0, 1] },
+    { number: 6, clue: 'Daily Trojan is a ---- source', position: [0, 5] }
+  ]
+};
 
-// const correctAnswers = {
-//   'cell-1-1': 'T', 'cell-1-2': 'R', 'cell-1-3': 'O', 'cell-1-4': 'J', 'cell-1-5': 'A', 'cell-1-6': 'N',
-//   'cell-2-2': 'E', 'cell-2-6': 'E',
-//   'cell-3-1': 'E', 'cell-3-2': 'G', 'cell-3-3': 'G', 'cell-3-6': 'W',
-//   'cell-4-2': 'A', 'cell-4-6': 'S',
-//   'cell-5-1': 'S', 'cell-5-2': 'L', 'cell-5-3': 'A', 'cell-5-4': 'Y',
-// };
+const correctAnswers = {
+  'cell-1-1': 'T', 'cell-1-2': 'R', 'cell-1-3': 'O', 'cell-1-4': 'J', 'cell-1-5': 'A', 'cell-1-6': 'N',
+  'cell-2-2': 'E', 'cell-2-6': 'E',
+  'cell-3-1': 'E', 'cell-3-2': 'G', 'cell-3-3': 'G', 'cell-3-6': 'W',
+  'cell-4-2': 'A', 'cell-4-6': 'S',
+  'cell-5-1': 'S', 'cell-5-2': 'L', 'cell-5-3': 'A', 'cell-5-4': 'Y',
+};
 
 
 // check if the current cell should be numbered and return the correct number
