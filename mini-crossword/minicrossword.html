@@ -9,21 +9,17 @@
 <body>
 
   <img id="dt-logo" src="../imgs/dt-logo.png" height="50" width=auto style="cursor: pointer;" onclick="homeRedirect()"alt="Daily Trojan Logo"/>
-  <!-- <nav id="navbar">
-    <ul>
-      <a href="minicrossword.html">Crossword</a>
-      <a href="#puzzle">Puzzle</a>
-  </ul> -->
   </nav>
   <h1>Daily Trojan Mini Crossword</h1>
-  <div class="crossword"></div>
 
-  <div class="clues">
-    <h2>Across</h2>
-    <ul id="across-clues"></ul>
+  <div class="crossword-container">
+    <div class="crossword"></div>
 
-    <h2>Down</h2>
-    <ul id="down-clues"></ul>
+    <div class="clues">
+      <ul id="across-clues"></ul>
+
+      <ul id="down-clues"></ul>
+    </div>
   </div>
 
   <button onclick="checkSolution()">Check Solution</button>
