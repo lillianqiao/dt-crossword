@@ -5,6 +5,10 @@
      margin: 0;
    }
 
+   #title {
+    font-family: 'Georgia', sans-serif;
+   }
+
    .crossword {
      display: inline-block;
      margin-bottom: 20px;

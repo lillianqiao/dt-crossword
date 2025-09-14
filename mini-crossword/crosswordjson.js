@@ -1,6 +1,13 @@
 let crosswordData = {};
 let correctAnswers = {};
 let currentDirection = 'across'; // track current input direction
+// timer global variables
+let timerInterval = null;
+let timerStartEpoch = null; // ms since epoch when started
+let timerElapsedMs = 0;     // accumulated time in ms
+const LS_TIMER_ELAPSED = 'cw_timerElapsedMs';
+const LS_TIMER_RUNNING = 'cw_timerRunning';
+const LS_TIMER_BEST    = 'cw_bestTimeMs';
 
 async function loadCrosswordData() {
   const response = await fetch('crossword-data.json'); 
@@ -8,10 +15,40 @@ async function loadCrosswordData() {
   generateCrossword();
   populateClues();
   loadSavedAnswers();
+  loadTimerFromStorage(); // start the timer and continue it until crossword is completed
+  if (!localStorage.getItem('crosswordCompleted')) {
+    startTimer();
+  }
 }
 
 function generateCrossword() {
   const crosswordContainer = document.querySelector('.crossword');
+
+  // creating timer/top bar before generating grid
+  const topBar = document.createElement('div');
+  topBar.style.display = 'flex';
+  topBar.style.justifyContent = 'space-between';
+  topBar.style.alignItems = 'center';
+  topBar.style.width = '75%';
+  topBar.style.maxWidth = '800px';
+  topBar.style.margin = '0 auto 10px';
+
+  const timerEl = document.createElement('div');
+  timerEl.id = 'timer-display';
+  timerEl.style.fontFamily = '"Courier New", monospace';
+  timerEl.style.fontSize = '18px';
+  timerEl.style.fontWeight = '599';
+  timerEl.textContent = '00:00';
+
+  const bestEl = document.createElement('div');
+  bestEl.id = 'best-time-display';
+  bestEl.style.fontFamily = '"Courier New", monospace';
+  bestEl.style.fontSize = '12px';
+  bestEl.style.opacity = '0.8';
+
+  topBar.appendChild(timerEl);
+  topBar.appendChild(bestEl);
+  crosswordContainer.prepend(topBar);
   
   // style of main container
   crosswordContainer.style.display = 'flex';
@@ -116,7 +153,7 @@ function handleInput(event, rowIndex, cellIndex) {
   if (event.inputType === 'deleteContentBackward') {
     moveToPreviousCell(rowIndex, cellIndex);
   } else if (input.value) {
-    moveToNextCell(rowIndex, cellIndex);
+    moveToNextCellWithinWord(rowIndex, cellIndex);
   }
 }
 
@@ -158,6 +195,13 @@ function handleKeyDown(event, rowIndex, cellIndex) {
     case 'Enter':
     case 'Return':
       event.preventDefault();
+      //if it's the end of the word and user tabs, move to the next clue in the list
+      const end = findWordEnd(rowIndex, cellIndex, currentDirection);
+      if (end.row === rowIndex && end.col === cellIndex) {
+        const start = findWordStart(rowIndex, cellIndex, currentDirection);
+        focusNextClueSameListOrNextList(currentDirection, start.row, start.col);
+        break;
+      }
       if (currentDirection === 'across') {
         let nextCol = cellIndex + 1;
         while (nextCol < crosswordData.grid[rowIndex].length) {
@@ -181,22 +225,26 @@ function handleKeyDown(event, rowIndex, cellIndex) {
     case 'ArrowRight':
       event.preventDefault();
       currentDirection = 'across';
-      moveHorizontally(rowIndex, cellIndex, 1);
+      moveToNextCellWithinWord(rowIndex, cellIndex);
+      // moveHorizontally(rowIndex, cellIndex, 1);
       break;
     case 'ArrowLeft':
       event.preventDefault();
       currentDirection = 'across';
-      moveHorizontally(rowIndex, cellIndex, -1);
+      // moveHorizontally(rowIndex, cellIndex, -1);
+      moveToPrevCellWithinWord(rowIndex, cellIndex);
       break;
     case 'ArrowDown':
       event.preventDefault();
       currentDirection = 'down';
-      moveVertically(rowIndex, cellIndex, 1);
+      // moveVertically(rowIndex, cellIndex, 1);
+      moveToNextCellWithinWord(rowIndex, cellIndex);
       break;
     case 'ArrowUp':
       event.preventDefault();
       currentDirection = 'down';
-      moveVertically(rowIndex, cellIndex, -1);
+      // moveVertically(rowIndex, cellIndex, -1);
+      moveToPrevCellWithinWord(rowIndex, cellIndex);
       break;
   }
 }
@@ -225,7 +273,105 @@ function handleClick(event, rowIndex, cellIndex) {
     acrossHeader.style.fontWeight = currentDirection === 'across' ? 'bold' : 'normal';
     downHeader.style.fontWeight = currentDirection === 'down' ? 'bold' : 'normal';
   }
+  highlightCurrClue(rowIndex, cellIndex);
 }
+
+function findWordEnd(row, col, direction) {
+  if (direction === 'across') {
+    const rowLen = crosswordData.grid[row].length;
+    while (col + 1 < rowLen && crosswordData.grid[row][col + 1] !== null) col++;
+    return { row, col };
+  } else {
+    while (row + 1 < crosswordData.grid.length && crosswordData.grid[row + 1][col] !== null) row++;
+    return { row, col };
+  }
+}
+
+function getSortedClueLists() {
+  const across = [...crosswordData.acrossClues].sort((a, b) => a.number - b.number);
+  const down = [...crosswordData.downClues].sort((a, b) => a.number - b.number);
+  return { across, down };
+}
+
+function getClueIndexByStart(direction, startRow, startCol) {
+  const { across, down } = getSortedClueLists();
+  const list = direction === 'across' ? across : down;
+  const idx = list.findIndex(c => c.position[0] === startRow && c.position[1] === startCol);
+  return { idx, list, across, down };
+}
+
+function focusClueStart(direction, clueObj) {
+  currentDirection = direction;
+  updateHeaderStyles();
+  const [r, c] = clueObj.position;
+  focusCell(r, c);
+  highlightCurrClue(r, c);
+}
+
+function focusNextClueSameListOrNextList(direction, startRow, startCol) {
+  const { idx, list, across, down } = getClueIndexByStart(direction, startRow, startCol);
+  if (idx === -1) return;
+
+  // next in the same list if it exists
+  if (idx + 1 < list.length) {
+    const nextClue = list[idx + 1];
+    focusClueStart(direction, nextClue);
+    return;
+  }
+
+  // otherwise jump to the first clue of the other list
+  const nextDirection = direction === 'across' ? 'down' : 'across';
+  const nextList = nextDirection === 'across' ? across : down;
+  if (!nextList.length) return; // safety
+  focusClueStart(nextDirection, nextList[0]);
+}
+
+
+function onClueClick(direction, clue) { //setting cursor to the first letter of the clue clicked
+  currentDirection = direction;
+  updateHeaderStyles();
+
+  const [row, col] = clue.position; // put the cursor on the first letter of the word
+  focusCell(row, col);
+
+  // highlight the clicked clue
+  highlightCurrClue(row, col);
+
+  const cell = document.getElementById(`cell-${row}-${col}`);
+  if (cell) cell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+
+function isPartOfAcrossWord(row, col) {
+  if (crosswordData.grid[row][col] === null) return false;
+  const rowLen = crosswordData.grid[row].length;
+  const left = col > 0 && crosswordData.grid[row][col - 1] !== null;
+  const right = col + 1 < rowLen && crosswordData.grid[row][col + 1] !== null;
+  return left || right; // at least one neighbor horizontally
+}
+
+function isPartOfDownWord(row, col) {
+  if (crosswordData.grid[row][col] === null) return false;
+  const up = row > 0 && crosswordData.grid[row - 1][col] !== null;
+  const down = row + 1 < crosswordData.grid.length && crosswordData.grid[row + 1][col] !== null;
+  return up || down; // at least one neighbor vertically
+}
+
+function findWordStart(row, col, direction) {
+  if (direction === 'across') {
+    while (col > 0 && crosswordData.grid[row][col - 1] !== null) col--;
+    return { row, col };
+  } else {
+    while (row > 0 && crosswordData.grid[row - 1][col] !== null) row--;
+    return { row, col };
+  }
+}
+
+function getClueByStart(row, col, direction) {
+  const list = direction === 'across' ? crosswordData.acrossClues : crosswordData.downClues;
+  return list.find(clue => clue.position[0] === row && clue.position[1] === col) || null;
+}
+
 
 function moveToNextCell(rowIndex, cellIndex) {
   if (currentDirection === 'across') {
@@ -240,6 +386,37 @@ function moveToPreviousCell(rowIndex, cellIndex) {
     moveHorizontally(rowIndex, cellIndex, -1);
   } else {
     moveVertically(rowIndex, cellIndex, -1);
+  }
+}
+
+function moveToNextCellWithinWord(rowIndex, cellIndex) {
+  if (currentDirection === 'across') {
+    const nextCol = cellIndex + 1;
+    if (nextCol < crosswordData.grid[rowIndex].length &&
+        crosswordData.grid[rowIndex][nextCol] !== null) {
+      focusCell(rowIndex, nextCol);
+    }
+    // else: end of word -> stay put
+  } else { // down
+    const nextRow = rowIndex + 1;
+    if (nextRow < crosswordData.grid.length &&
+        crosswordData.grid[nextRow][cellIndex] !== null) {
+      focusCell(nextRow, cellIndex);
+    }
+  }
+}
+
+function moveToPrevCellWithinWord(rowIndex, cellIndex) {
+  if (currentDirection === 'across') {
+    const prevCol = cellIndex - 1;
+    if (prevCol >= 0 && crosswordData.grid[rowIndex][prevCol] !== null) {
+      focusCell(rowIndex, prevCol);
+    }
+  } else { // down
+    const prevRow = rowIndex - 1;
+    if (prevRow >= 0 && crosswordData.grid[prevRow][cellIndex] !== null) {
+      focusCell(prevRow, cellIndex);
+    }
   }
 }
 
@@ -287,6 +464,7 @@ function focusCell(row, col) {
   const cell = document.getElementById(`cell-${row}-${col}`);
   if (cell) {
     cell.focus();
+    highlightCurrClue(row, col); //also highlight changing clues as keyboard moves to different wordsß
   }
 }
 
@@ -374,14 +552,20 @@ function populateClues() {
   // adding clues
   crosswordData.acrossClues.forEach(clue => {
     const div = document.createElement('div');
+    div.id = `clue-across-${clue.number}`;
     div.textContent = `${clue.number}. ${clue.clue}`;
     Object.assign(div.style, clueStyle);
+    div.style.cursor = 'pointer';
+    div.addEventListener('click', () => onClueClick('across', clue)); //making the clue interactive
     acrossCluesContainer.appendChild(div);
   });
 
   crosswordData.downClues.forEach(clue => {
     const div = document.createElement('div');
+    div.id = `clue-down-${clue.number}`;
     div.textContent = `${clue.number}. ${clue.clue}`;
+    div.style.cursor = 'pointer';
+    div.addEventListener('click', () => onClueClick('down', clue)); //making the clue interactive
     Object.assign(div.style, clueStyle);
     downCluesContainer.appendChild(div);
   });
@@ -411,6 +595,28 @@ function loadSavedAnswers() {
         cell.style.backgroundColor = '#93C572';
       }
     }
+  }
+}
+
+function highlightCurrClue(rowIndex, cellIndex) { //highlights the current clue the player is on in butter yellow 
+
+  // clear previous highlights
+  document.querySelectorAll('.clue-highlight').forEach(element => {
+    element.style.backgroundColor = '';
+    element.classList.remove('clue-highlight');
+  });
+
+  // find the clue for the word that contains (rowIndex, cellIndex) in currentDirection
+  const start = findWordStart(rowIndex, cellIndex, currentDirection);
+  const clue = getClueByStart(start.row, start.col, currentDirection);
+  if (!clue) return;
+
+  const element = document.getElementById(`clue-${currentDirection}-${clue.number}`);
+  if (element) {
+    element.style.backgroundColor = '#FFF4B8'; // butter yellow
+    element.classList.add('clue-highlight');
+    // keep the clue in view without jumping the page
+    element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 }
 
@@ -454,7 +660,10 @@ function checkSolution() {
   if (allCorrect && count === totalCells) {
     localStorage.setItem('userAnswers', JSON.stringify(correctAnswers));
     localStorage.setItem('crosswordCompleted', 'true');
-    window.location.href = "congrats.html";
+    stopAndRecordBest(); // stop timer and save best time
+    setTimeout(function() {
+      window.location.href = "congrats.html"; // 2 seconds before redirecting to congrats page
+    }, 1000);
   }
 }
 
@@ -469,6 +678,81 @@ function resetGrid() {
     if (existingLine) existingLine.remove();
   });
   localStorage.removeItem('crosswordCompleted');
+}
+
+// timer logic
+function fmt(ms) {
+  const totalSec = Math.floor(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function updateTimerUI() {
+  const disp = document.getElementById('timer-display');
+  if (!disp) return;
+  const now = Date.now();
+  const running = timerStartEpoch !== null;
+  const liveMs = running ? (now - timerStartEpoch) : 0;
+  const total = timerElapsedMs + liveMs;
+  disp.textContent = fmt(total);
+
+  const best = Number(localStorage.getItem(LS_TIMER_BEST) || 0);
+  const bestEl = document.getElementById('best-time-display');
+  if (bestEl && best > 0) bestEl.textContent = `Completed In: ${fmt(best)}`;
+}
+
+function tick() {
+  updateTimerUI();
+}
+
+function startTimer() {
+  if (timerStartEpoch !== null) return; // already running
+  timerStartEpoch = Date.now();
+  localStorage.setItem(LS_TIMER_RUNNING, '1');
+  timerInterval = setInterval(tick, 250); // 4x/sec for smoothness
+  tick();
+}
+
+function pauseTimer() {
+  if (timerStartEpoch === null) return;
+  timerElapsedMs += Date.now() - timerStartEpoch;
+  timerStartEpoch = null;
+  localStorage.setItem(LS_TIMER_ELAPSED, String(timerElapsedMs));
+  localStorage.removeItem(LS_TIMER_RUNNING);
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  updateTimerUI();
+}
+
+function resetTimer() {
+  timerElapsedMs = 0;
+  timerStartEpoch = null;
+  localStorage.removeItem(LS_TIMER_ELAPSED);
+  localStorage.removeItem(LS_TIMER_RUNNING);
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  updateTimerUI();
+}
+
+function loadTimerFromStorage() {
+  // if the puzzle was already completed previously, do nothing
+  const completed = localStorage.getItem('crosswordCompleted');
+  if (completed) { updateTimerUI(); return; }
+
+  const savedElapsed = Number(localStorage.getItem(LS_TIMER_ELAPSED) || 0);
+  const wasRunning   = localStorage.getItem(LS_TIMER_RUNNING) === '1';
+  timerElapsedMs = isNaN(savedElapsed) ? 0 : savedElapsed;
+
+  if (wasRunning) startTimer(); else updateTimerUI();
+}
+
+function stopAndRecordBest() {
+  // stop and store final time + best
+  pauseTimer();
+  const finalMs = timerElapsedMs;
+  const best = Number(localStorage.getItem(LS_TIMER_BEST) || 0);
+  if (best === 0 || finalMs < best) {
+    localStorage.setItem(LS_TIMER_BEST, String(finalMs));
+  }
 }
 
 loadCrosswordData();
